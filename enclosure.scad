@@ -25,6 +25,7 @@ c6_lip = 0.4;     // how far the C6 hooks overlap the board; more grips harder b
 led_lip = 0.6;    // the same for the LED board's side clips
 boot_gap = 0.4;   // air between the boot tab and the switch; lower if a press doesn't click
 dome_hole = 10;   // the dome's base measured 9.5
+pir_play = 0.6;   // side play for the PIR's white board in its cradle
 dome_y = 11;      // dome centre height; move it if the dome doesn't line up
 wall = 2.4;
 frame_t = 2;
@@ -118,13 +119,15 @@ module usb_cut() {
 
 module pir_cradle() {
   // Walls either side of the white board, with a ledge under its edges, lips over them and stops
-  // behind it. Its connector (11.4 mm) and header hang down between the ledges.
-  gx = 6.72 + 0.2;
+  // behind it. Its connector (11.4 mm) and header hang down between the ledges. The board is 13.2 mm
+  // wide; the walls leave 0.6 mm a side, as a test print with 0.3 mm was too tight to slide in.
+  gx = 6.6 + pir_play;  // the walls' inner face
+  inner = 6.0;          // the ledges' and lips' inner edge: under or over the board by 0.6 mm
   for (s = [-1, 1]) scale([s, 1, 1]) {
-    translate([gx - 0.8, wall - 0.1, wall]) cube([0.8 + 1.4, pir_y - wall + 0.1, 25.6]);    // ledge
-    translate([gx, wall, wall]) cube([2, pir_y + 1.6 + 1.2 - wall, 25.6]);                  // wall
-    translate([gx - 0.9, pir_y + 1.6 + 0.15, pir_end + 4]) cube([2.3, 0.9, 14]);            // lip
-    translate([gx - 0.8, pir_y - 2, pir_end - 2]) cube([2.2, 2 + 1.6, 2 - 0.2]);            // stop
+    translate([inner, wall - 0.1, wall]) cube([gx + 2 - inner, pir_y - wall + 0.1, 25.6]);          // ledge
+    translate([gx, wall, wall]) cube([2, pir_y + 1.6 + 1.2 - wall, 25.6]);                          // wall
+    translate([inner, pir_y + 1.6 + 0.15, pir_end + 4]) cube([gx + 2 - inner, 0.9, 14]);            // lip
+    translate([inner, pir_y - 2, pir_end - 2]) cube([gx + 2 - inner, 2 + 1.6, 2 - 0.2]);            // stop
   }
 }
 
