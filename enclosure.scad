@@ -22,7 +22,7 @@ $fn = 32;
 tol = 0.3;        // gap around a board
 snap = 0.6;       // how far the frame's snap ridge sticks out; lower if it's too hard to close
 c6_lip = 0.4;     // how far the C6 hooks overlap the board; more grips harder but strains the hook
-led_lip = 0.9;    // the same for the LED board's side clips
+led_lip = 0.6;    // the same for the LED board's side clips
 boot_gap = 0.4;   // air between the boot tab and the switch; lower if a press doesn't click
 dome_hole = 10;   // the dome's base measured 9.5
 dome_y = 11;      // dome centre height; move it if the dome doesn't line up
@@ -122,28 +122,34 @@ module pir_cradle() {
   gx = 6.72 + 0.2;
   for (s = [-1, 1]) scale([s, 1, 1]) {
     translate([gx - 0.8, wall - 0.1, wall]) cube([0.8 + 1.4, pir_y - wall + 0.1, 25.6]);    // ledge
-    translate([gx, wall, wall]) cube([1.4, pir_y + 1.6 + 1.2 - wall, 25.6]);                // wall
+    translate([gx, wall, wall]) cube([2, pir_y + 1.6 + 1.2 - wall, 25.6]);                  // wall
     translate([gx - 0.9, pir_y + 1.6 + 0.15, pir_end + 4]) cube([2.3, 0.9, 14]);            // lip
     translate([gx - 0.8, pir_y - 2, pir_end - 2]) cube([2.2, 2 + 1.6, 2 - 0.2]);            // stop
   }
 }
 
-module led_clips(cut) {  // cut: true for the pocket in the wall, false for the finger in it
-  y = led_oy - 14;       // between the LEDs at -21 and -6
-  w = 6;
-  z0 = z_led_back - 10;
-  zf = z_led_back + led_t + 0.15; // the hook's flat underside, just in front of the board
+// The LED board's side clips: a strip of the side wall, freed by two slits, thinned outside so it
+// can flex outwards, with a hook over the board's front edge. Part of the wall, so nothing slender
+// stands on its own while printing.
+module led_clips(cut) {  // cut: true for the slits and thinning, false for the hook
+  y = led_oy - 13.5;     // between the LEDs at -21 and -6
+  w = 8;
+  zf = z_led_back + led_t + 0.15;  // the hook's flat underside, just in front of the board
+  z0 = zf - 8;                     // the strip's root
   edge = 32.37 + tol;
   for (s = [-1, 1]) scale([s, 1, 1]) translate([0, y - w / 2, 0])
-    if (cut) translate([edge - 1.5, -0.6, z0]) cube([1.5 + 1 + 0.7, w + 1.2, z_rim]);
-    else translate([0, w, 0]) rotate([90, 0, 0]) linear_extrude(w)
-      polygon([[edge + 1, z0 - 0.5], [edge + 1, zf + 1.1], [edge, zf + 1.1], [edge - led_lip, zf], [edge, zf], [edge, z0 - 0.5]]);
+    if (cut) {
+      for (dy = [-0.8, w]) translate([edge - 1.5, dy, z0]) cube([wall + 2.5, 0.8, z_rim]);   // slits, through the ledge too
+      translate([edge - 1.5, 0, z0 - 0.01]) cube([1.5, w, z_led_back - z0 + 0.01]);           // no ledge on the strip
+      translate([edge + 1.8, -0.8, z0]) cube([wall, w + 1.6, z_rim]);                          // thinning
+    } else translate([0, w, 0]) rotate([90, 0, 0]) linear_extrude(w)
+      polygon([[edge + 0.01, zf - 1], [edge + 0.01, zf + 1.1], [edge, zf + 1.1], [edge - led_lip, zf], [edge, zf]]);
 }
 
 module ridge(grow = 0) {  // snap ridge along both straight sides, on the body's outside
   z = z_rim - 3.5;
-  // clear of the LED clips' slots at y 47-53; grown at the ends too, so the frame needn't line up exactly
-  for (s = [-1, 1]) scale([s, 1, 1]) translate([half, 26 - grow - 0.3, z]) rotate([-90, 0, 0]) linear_extrude(20 + 2 * grow + 0.6)
+  // clear of the LED clips' slits at y 46-56; grown at the ends too, so the frame needn't line up exactly
+  for (s = [-1, 1]) scale([s, 1, 1]) translate([half, 24 - grow - 0.3, z]) rotate([-90, 0, 0]) linear_extrude(20 + 2 * grow + 0.6)
     polygon([[-0.01, 1 + grow], [-0.01, -1 - grow], [snap + grow, -0.2 - grow], [snap + grow, 0.2 + grow]]);
 }
 
@@ -173,15 +179,13 @@ module body() {
         // paperclip hole for reset
         translate([reset.x, reset.y, -1]) cylinder(d = 2.5, h = wall + 2);
       }
-      // posts carrying the bar over the ribbon's path
-      for (x = [-24, -11, 8, 24]) translate([x - 1, 23.2, wall - 0.1]) cube([2, 3.8, z_led_back - wall + 0.2]);
-      // gussets at 45 degrees from the posts and walls meet under the bar, so it isn't a bridge
-      bar_x = [-half + wall, -24, -11, 8, 24, half - wall];
-      for (i = [0 : len(bar_x) - 2]) let(a = bar_x[i], b = bar_x[i + 1], h = (b - a) / 2 + 0.5, z = z_led_back + 0.01)
-        translate([0, 23.2 + 3.8, 0]) rotate([90, 0, 0]) linear_extrude(3.8) {  // two overlapping triangles
-          polygon([[a, z], [a, z - h], [a + h, z]]);
-          polygon([[b, z], [b, z - h], [b - h, z]]);
-        }
+      // a solid wall under the house opening: it's where the paper's bottom edge sits, and its
+      // arched doorway lets the PIR's ribbon through. Earlier versions were a bar on posts, which
+      // the nozzle knocked loose.
+      translate([0, 26.7, 0]) rotate([90, 0, 0]) linear_extrude(26.7 - 23.2) difference() {
+        translate([-half + 1, wall - 0.1]) square([2 * half - 2, z_rim - wall + 0.1]);
+        polygon([[-8, 1.2], [6.5, 1.2], [6.5, 12], [-0.75, 19.25], [-8, 12]]);
+      }
       back_features();
       pir_cradle();
       ridge();
@@ -196,7 +200,7 @@ module body() {
 module frame() { // modelled in place: its back sits on the body's rim
   clear = 0.2;
   skirt = 1.6;
-  depth = 6;
+  depth = 16;   // deep enough to cover the LED clips' slits, so no light leaks out the sides
   difference() {
     union() {
       translate([0, 0, z_rim + 0.1]) linear_extrude(frame_t) offset(r = clear + skirt) outer();
@@ -258,7 +262,7 @@ if (part == "test_c6") intersection() {
 if (part == "test_led") translate([0, 0, -(z_led_back - 11)]) cut([-40, -1, z_led_back - 11], [40, 95, z_led_back + led_t + 3]) body();
 if (part == "test_pir") translate([0, 0, -pir_end + 5]) cut([-12, -1, pir_end - 5], [12, 23, z_rim]) body(); // stops under the bar
 if (part == "test_dome") flip() cut([-14, -2.5, z_rim - 6.5], [14, 28, z_rim + 3]) frame();
-if (part == "test_snap_b") translate([0, 0, -(z_rim - 12)]) cut([half - 4, 22, z_rim - 12], [half + 2, 47, z_rim]) body(); // clear of the bar's gussets
-if (part == "test_snap_f") flip() cut([half - 8, 22, z_rim - 7], [half + 4, 47, z_rim + 3]) frame();
+if (part == "test_snap_b") translate([0, 0, -(z_rim - 12)]) cut([half - 4, 22, z_rim - 12], [half + 2, 45.5, z_rim]) body(); // clear of the clip slits
+if (part == "test_snap_f") flip() cut([half - 8, 22, z_rim - 7], [half + 4, 45.5, z_rim + 3]) frame();
 if (part == "front") { color("royalblue") body(); boards(); color("royalblue") frame(); }
 if (part == "section") { intersection() { union() { color("royalblue") body(); boards(); color("royalblue") frame(); } translate([-60, -5, -5]) cube([60 - 1.8, 110, 60]); } } // through the ribbon ports
