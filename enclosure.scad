@@ -21,7 +21,7 @@ $fn = 32;
 // ---- Knobs. Hardware is never the datasheet. ----
 tol = 0.3;        // gap around a board
 snap = 0.6;       // how far the frame's snap ridge sticks out; lower if it's too hard to close
-c6_lip = 0.5;     // how far the C6 hooks overlap the board; more grips harder but strains the hook
+c6_lip = 0.4;     // how far the C6 hooks overlap the board; more grips harder but strains the hook
 led_lip = 0.9;    // the same for the LED board's side clips
 boot_gap = 0.4;   // air between the boot tab and the switch; lower if a press doesn't click
 dome_hole = 10;   // the dome's base measured 9.5
@@ -67,14 +67,16 @@ function c6y(y) = c6_cy - y;           // turned over to face the back wall
 function c6z(z) = c6_top + 1.59 - z;
 
 // A hook on a post, one solid profile rooted in the back wall. The board rests on separate pads,
-// so the post is thin all the way down and flexes over its whole length.
-module post_hook(x, side) {  // side: +1 clips the top edge, -1 the bottom edge
-  w = 2.5; t = 1.6;
+// so the post flexes over its whole length. It bends across the print's layers, its weakest way,
+// so it's as wide as the parts around it allow and thickens towards the root, with a fillet.
+module post_hook(x0, x1, side) {  // x0..x1: its span along the board's edge, in the C6's frame
+  t = 1.6;
   e = 9.26 + tol / 2;
   zb = c6_bot + 0.15;  // the hook's flat underside; its chamfer lets the board push past
   root = wall - 0.5;
-  translate([x - w / 2, c6_cy, 0]) scale([1, side, 1]) rotate([90, 0, 90]) linear_extrude(w)
-    polygon([[e + t, root], [e + t, zb + 1.1], [e, zb + 1.1], [e - c6_lip, zb], [e, zb], [e, root]]);
+  translate([c6x(x0), c6_cy, 0]) scale([1, side, 1]) rotate([90, 0, 90]) linear_extrude(x1 - x0)
+    polygon([[e + t + 0.8, root], [e + t, c6_top], [e + t, zb + 1.1], [e, zb + 1.1], [e - c6_lip, zb], [e, zb],
+             [e, wall + 0.8], [e - 0.8, wall], [e - 0.8, root]]);
 }
 
 boot = [c6x(13.72), c6y(-7.11)];
@@ -82,8 +84,10 @@ reset = [c6x(13.72), c6y(7.11)];
 tab_w = 5;
 
 module back_features() {
-  // C6 hooks, two on each long edge
-  for (x = [8, -12], side = [-1, 1]) post_hook(c6x(x), side);
+  // C6 hooks, two on each long edge, clear of the ribbons (x -5.5 to 7.3) and the boot tab's slot
+  post_hook(7.4, 10, 1);   // boot side (side +1 is up here): narrow, to stay clear of the tab's slot
+  post_hook(7.4, 13, -1);
+  for (side = [-1, 1]) post_hook(-16, -9.5, side);
   // pads the board rests on, in gaps between its parts: beside the RGB LED and beside BOOT
   for (p = [[10.35, 7.6, 1.8], [9, -7.6, 2.4]])
     translate([c6x(p[0]), c6y(p[1]), wall - 0.5]) cylinder(d = p[2], h = c6_top - wall + 0.5);
@@ -95,13 +99,21 @@ module back_features() {
   translate([boot.x, boot.y, 0.8]) cylinder(d = 3, h = c6z(3.54) - 0.8 - boot_gap); // rooted in the thinned tongue
   // USB tunnel's walls, so the plug finds the socket blind
   difference() {
-    translate([c6x(17.01) + 0.7, c6_cy - 8.4, wall - 0.5]) cube([half - wall - c6x(17.01) - 0.2, 16.8, 13.1]);
+    translate([c6x(17.01) + 0.7, 0, 0]) rotate([90, 0, 90]) linear_extrude(half - wall - c6x(17.01) - 0.2)
+      offset(delta = 1.4) usb_window();
     usb_cut();
   }
 }
 
+// The plug's opening, in (y, z). Its front corners are cut at 45 degrees so the roof prints as a
+// peak instead of a bridge, which PETG sags on; the extra height keeps 9 mm clear where a plug's
+// edges are.
+module usb_window() {
+  z0 = c6z(2.77) - 5;
+  translate([c6_cy, 0]) polygon([[-7, z0], [7, z0], [7, z0 + 9], [2, z0 + 14], [-2, z0 + 14], [-7, z0 + 9]]);
+}
 module usb_cut() {
-  translate([c6x(17.01) + 0.2, c6_cy - 7, c6z(2.77) - 5]) cube([half, 14, 10]);
+  translate([c6x(17.01) + 0.2, 0, 0]) rotate([90, 0, 90]) linear_extrude(half) usb_window();
 }
 
 module pir_cradle() {
@@ -155,13 +167,21 @@ module body() {
           translate([-tab_w / 2, -2]) square([tab_w, 19]);
         }
         translate([boot.x - tab_w / 2, boot.y - 2, wall - 0.8]) cube([tab_w, 18, 1]); // thin it to flex
-        // room for the PIR ribbon's fold: the back wall is 1.2 mm here, clear of the hooks' roots
-        translate([c6x(0.89) - 6, wall, 1.2]) cube([11.4 + 0.6, c6_cy - 9.26 - 3 - wall, 2]);
+        // room for the PIR ribbon's fold: the back wall is 1.2 mm here. It sits between the PIR
+        // cradle's ledges (inner edges at x = 6.12), which the ribbon has to pass between anyway.
+        translate([-6, pir_y - 6, 1.2]) cube([12, c6_cy - 9.26 - 3 - (pir_y - 6), 2]);
         // paperclip hole for reset
         translate([reset.x, reset.y, -1]) cylinder(d = 2.5, h = wall + 2);
       }
       // posts carrying the bar over the ribbon's path
       for (x = [-24, -11, 8, 24]) translate([x - 1, 23.2, wall - 0.1]) cube([2, 3.8, z_led_back - wall + 0.2]);
+      // gussets at 45 degrees from the posts and walls meet under the bar, so it isn't a bridge
+      bar_x = [-half + wall, -24, -11, 8, 24, half - wall];
+      for (i = [0 : len(bar_x) - 2]) let(a = bar_x[i], b = bar_x[i + 1], h = (b - a) / 2 + 0.5, z = z_led_back + 0.01)
+        translate([0, 23.2 + 3.8, 0]) rotate([90, 0, 0]) linear_extrude(3.8) {  // two overlapping triangles
+          polygon([[a, z], [a, z - h], [a + h, z]]);
+          polygon([[b, z], [b, z - h], [b - h, z]]);
+        }
       back_features();
       pir_cradle();
       ridge();
@@ -238,7 +258,7 @@ if (part == "test_c6") intersection() {
 if (part == "test_led") translate([0, 0, -(z_led_back - 11)]) cut([-40, -1, z_led_back - 11], [40, 95, z_led_back + led_t + 3]) body();
 if (part == "test_pir") translate([0, 0, -pir_end + 5]) cut([-12, -1, pir_end - 5], [12, 23, z_rim]) body(); // stops under the bar
 if (part == "test_dome") flip() cut([-14, -2.5, z_rim - 6.5], [14, 28, z_rim + 3]) frame();
-if (part == "test_snap_b") translate([0, 0, -(z_rim - 12)]) cut([half - 8, 22, z_rim - 12], [half + 2, 47, z_rim]) body();
+if (part == "test_snap_b") translate([0, 0, -(z_rim - 12)]) cut([half - 4, 22, z_rim - 12], [half + 2, 47, z_rim]) body(); // clear of the bar's gussets
 if (part == "test_snap_f") flip() cut([half - 8, 22, z_rim - 7], [half + 4, 47, z_rim + 3]) frame();
 if (part == "front") { color("royalblue") body(); boards(); color("royalblue") frame(); }
 if (part == "section") { intersection() { union() { color("royalblue") body(); boards(); color("royalblue") frame(); } translate([-60, -5, -5]) cube([60 - 1.8, 110, 60]); } } // through the ribbon ports
