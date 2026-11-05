@@ -9,7 +9,8 @@ motion-triggered light show on the Casita module's 10 LEDs, logging every LED co
   can't wake it, and another long press turns it back on.
 - **Shows**: drift, fire, comet, sparkle.
 - **Telemetry**: `light_events` gets a row per LED colour change, up to ~300/s. `health` gets a row
-  a second, under `device = 'esp-light-show'`. Rows wait in a ~50 s ring until QuestDB acks them.
+  a second, under `device = 'esp-light-show'`. `motion_events` gets a row each time the PIR changes,
+  even with the lights off. Rows wait in a ~50 s ring until QuestDB acks them.
 
 The light show doesn't depend on the network: without WiFi or QuestDB it just runs.
 
@@ -58,6 +59,8 @@ Create them first, as QWP would otherwise pick wide column types and no TTL:
 ```sql
 CREATE TABLE IF NOT EXISTS light_events (ts TIMESTAMP, led BYTE, show SYMBOL, r SHORT, g SHORT, b SHORT)
   TIMESTAMP(ts) PARTITION BY DAY TTL 7 DAYS WAL DEDUP UPSERT KEYS(ts, led);
+CREATE TABLE IF NOT EXISTS motion_events (ts TIMESTAMP, active BYTE) -- 1 started, 0 ended
+  TIMESTAMP(ts) PARTITION BY MONTH TTL 3 MONTHS WAL DEDUP UPSERT KEYS(ts);
 ```
 
 `health` is shared with other devices, keyed on `(ts, device)`.

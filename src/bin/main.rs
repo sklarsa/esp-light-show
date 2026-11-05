@@ -115,7 +115,7 @@ async fn main(spawner: Spawner) -> ! {
 
     let motion = Input::new(
         peripherals.GPIO3,
-        InputConfig::default().with_pull(Pull::None),
+        InputConfig::default().with_pull(Pull::Down), // reads "no motion" if the module's unplugged
     );
     let button = Input::new(
         peripherals.GPIO9,
@@ -196,10 +196,25 @@ async fn main(spawner: Spawner) -> ! {
     let mut ticker = Ticker::every(Duration::from_millis(FRAME_MS));
     let mut next_health = Instant::now();
     let (mut was_motion, mut was_show, mut was_enabled) = (false, 0, true);
+    let (mut logged_motion, mut was_synced) = (false, false);
     loop {
         let now_ms = Instant::now().as_millis();
         let is_motion = motion.is_high();
         show.tick(now_ms, is_motion, button.is_low());
+        let synced = SYNCED.load(Relaxed);
+        // Edges only count once the clock is right, so log the level as it stands at the first
+        // sync: otherwise the first logged edge could be an end with no start.
+        if synced && (is_motion != logged_motion || !was_synced) {
+            record(
+                ring,
+                Rec::Motion {
+                    t_us: now_us(),
+                    active: is_motion,
+                },
+            );
+            logged_motion = is_motion;
+        }
+        was_synced = synced;
         if is_motion != was_motion || show.show != was_show || show.enabled != was_enabled {
             info!(
                 "motion={is_motion} show={} enabled={}",
@@ -217,28 +232,35 @@ async fn main(spawner: Spawner) -> ! {
             if let Err(e) = leds.write(&wire) {
                 error!("leds: {e:?}");
             }
-            if SYNCED.load(Relaxed) {
-                ring.lock(|r| {
-                    r.borrow_mut().push(Rec::Frame {
+            if synced {
+                record(
+                    ring,
+                    Rec::Frame {
                         t_us: now_us(),
                         show: show.show as u8,
                         changed: mask,
                         rgb: out,
-                    })
-                });
+                    },
+                );
             }
             sent = out;
         }
 
-        if SYNCED.load(Relaxed) && Instant::now() >= next_health {
+        if !synced {
+            next_health = Instant::now(); // don't owe a row for every second before the sync
+        } else if Instant::now() >= next_health {
             next_health += Duration::from_secs(1);
-            report_health(ring, reset_reason);
+            report_health(ring, reset_reason, is_motion);
         }
         ticker.next().await;
     }
 }
 
-fn report_health(ring: &SharedRing<Rec>, reset_reason: i32) {
+fn record(ring: &SharedRing<Rec>, rec: Rec) {
+    ring.lock(|r| r.borrow_mut().push(rec));
+}
+
+fn report_health(ring: &SharedRing<Rec>, reset_reason: i32, motion: bool) {
     ring.lock(|r| {
         let mut r = r.borrow_mut();
         let s = &QWP_STATS;
@@ -257,6 +279,7 @@ fn report_health(ring: &SharedRing<Rec>, reset_reason: i32) {
             s.last_error.load(Relaxed) as i32,
             Instant::now().as_secs() as i32,
             reset_reason,
+            motion as i32,
         ];
         let health = Rec::Health {
             t_us: now_us(),

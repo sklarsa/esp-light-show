@@ -211,6 +211,8 @@ pub enum Rec {
         changed: u16,
         rgb: Pixels,
     },
+    /// The PIR's output changed.
+    Motion { t_us: i64, active: bool },
     Health {
         t_us: i64,
         /// The connected AP's MAC as an integer, 0 when not associated.
@@ -221,7 +223,7 @@ pub enum Rec {
 }
 
 /// The columns of the shared `health` table that this board can fill, besides `ap_bssid`.
-pub const HEALTH_COLUMNS: [&str; 14] = [
+pub const HEALTH_COLUMNS: [&str; 15] = [
     "dropped",
     "tx_bytes",
     "encode_us",
@@ -236,9 +238,10 @@ pub const HEALTH_COLUMNS: [&str; 14] = [
     "qwp_last_error",
     "uptime_s",
     "reset_reason",
+    "motion", // the PIR's level now: motion_events can lose an edge, this heals within a second
 ];
 
-/// Writes records as up to two table blocks: `light_events` and `health`.
+/// Writes records as up to three table blocks: `light_events`, `motion_events` and `health`.
 pub fn encode(e: &mut qwp::Encoder<'_>, recs: &[Rec]) -> Result<(), qwp::Full> {
     use qwp::{BYTE, LONG, SHORT, SYMBOL};
 
@@ -278,6 +281,19 @@ pub fn encode(e: &mut qwp::Encoder<'_>, recs: &[Rec]) -> Result<(), qwp::Full> {
             e.i16s(events().map(|(_, _, _, rgb)| rgb[c] as i16))?;
         }
         e.timestamps(events().map(|(t, ..)| t))?;
+    }
+
+    let motion = || {
+        recs.iter().filter_map(|r| match r {
+            Rec::Motion { t_us, active } => Some((*t_us, *active)),
+            _ => None,
+        })
+    };
+    let rows = motion().count();
+    if rows > 0 {
+        e.table("motion_events", rows, &[("active", BYTE)])?;
+        e.i8s(motion().map(|(_, a)| a as i8))?;
+        e.timestamps(motion().map(|(t, _)| t))?;
     }
 
     let health = || {
@@ -440,6 +456,37 @@ mod tests {
             b.windows(4).any(|w| w == [0, 0, 200, 0]),
             "r column keeps 200"
         );
+    }
+
+    #[test]
+    fn motion_changes_go_to_their_own_table() {
+        let recs = [
+            Rec::Motion {
+                t_us: 1_000_000,
+                active: true,
+            },
+            Rec::Motion {
+                t_us: 2_000_000,
+                active: false,
+            },
+        ];
+        let mut buf = [0u8; 128];
+        let mut e = qwp::Encoder::new(&mut buf).unwrap();
+        encode(&mut e, &recs).unwrap();
+        let n = e.finish();
+        let at = buf[..n]
+            .windows(13)
+            .position(|w| w == b"motion_events")
+            .unwrap();
+        #[rustfmt::skip]
+        let block = [
+            2, 2,                                    // rows, columns
+            6, b'a', b'c', b't', b'i', b'v', b'e', qwp::BYTE,
+            0, 0x0A,                                 // designated timestamp
+            0, 1, 0,                                 // active: null flag, then 1 and 0 in order
+        ];
+        assert_eq!(&buf[at + 13..at + 13 + block.len()], &block);
+        assert!(!buf[..n].windows(12).any(|w| w == b"light_events"));
     }
 
     #[test]
