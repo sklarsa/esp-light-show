@@ -226,7 +226,15 @@ if (part == "frame") flip() frame();
 if (part == "assembly") { color("royalblue") body(); boards(); color("royalblue", 0.35) frame(); }
 if (part == "open") { color("royalblue") body(); boards(); }
 if (part == "check") { intersection() { body(); boards(); } intersection() { frame(); boards(); } }
-if (part == "test_c6") cut([-22, c6_cy - 13, 0], [half + 1, c6_cy + 27, 15.6]) body(); // includes the USB tunnel roof
+// Whole end stop and USB tunnel roof; the step at the top keeps the boot tab's hinge without
+// clipping a sliver off the roof wall.
+if (part == "test_c6") intersection() {
+  body();
+  union() {
+    translate([-24, c6_cy - 13, 0]) cube([half + 25, 36.8, 15.6]);
+    translate([-5, c6_cy + 23, 0]) cube([half + 6, 2.5, 15.6]);
+  }
+}
 if (part == "test_led") translate([0, 0, -(z_led_back - 11)]) cut([-40, -1, z_led_back - 11], [40, 95, z_led_back + led_t + 3]) body();
 if (part == "test_pir") translate([0, 0, -pir_end + 5]) cut([-12, -1, pir_end - 5], [12, 23, z_rim]) body(); // stops under the bar
 if (part == "test_dome") flip() cut([-14, -2.5, z_rim - 6.5], [14, 28, z_rim + 3]) frame();
