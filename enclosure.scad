@@ -82,16 +82,16 @@ module post_hook(x0, x1, side) {  // x0..x1: its span along the board's edge, in
 
 boot = [c6x(13.72), c6y(-7.11)];
 reset = [c6x(13.72), c6y(7.11)];
-tab_w = 5;
+tab_w = 4;      // the boot tab's width; its slot is 0.8 mm each side
 
 module back_features() {
   // C6 hooks, two on each long edge, clear of the ribbons (x -5.5 to 7.3) and the boot tab's slot
-  post_hook(7.4, 10, 1);   // boot side (side +1 is up here): narrow, to stay clear of the tab's slot
+  post_hook(7.4, 10.6, 1); // boot side (side +1 is up here): as wide as the boot tab's slot allows
   post_hook(7.4, 13, -1);
   for (side = [-1, 1]) post_hook(-16, -9.5, side);
   // pads the board rests on, in gaps between its parts: beside the RGB LED and beside BOOT
-  for (p = [[10.35, 7.6, 1.8], [9, -7.6, 2.4]])
-    translate([c6x(p[0]), c6y(p[1]), wall - 0.5]) cylinder(d = p[2], h = c6_top - wall + 0.5);
+  translate([c6x(9.45), c6y(9.2), wall - 0.5]) cube([1.8, 2.6, c6_top - wall + 0.5]); // between the RGB LED and RESET
+  translate([c6x(9), c6y(-7.6), wall - 0.5]) cylinder(d = 2.4, h = c6_top - wall + 0.5);
   // stop at the far end, so pushing the USB plug in can't slide BOOT off the plunger
   translate([c6x(-18.78) - 0.3 - 2, c6_cy + 2, wall - 0.5]) cube([2, 5, c6_bot - wall + 0.5]);
   // and a third rest on the RF can, away from the antenna
@@ -172,7 +172,7 @@ module body() {
         translate([-half + wall, wall, z_led_back - 0.01]) cube([2 * (half - wall), 23.2 - wall, z_rim]);
         // the boot tab: a tongue, attached at its top end
         translate([boot.x, boot.y, -1]) linear_extrude(wall + 2) difference() {
-          translate([-tab_w / 2 - 1, -3]) square([tab_w + 2, 19]);
+          translate([-tab_w / 2 - 0.8, -2.8]) square([tab_w + 1.6, 18.8]);
           translate([-tab_w / 2, -2]) square([tab_w, 19]);
         }
         translate([boot.x - tab_w / 2, boot.y - 2, wall - 0.8]) cube([tab_w, 18, 1]); // thin it to flex
