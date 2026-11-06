@@ -105,8 +105,9 @@ module back_features() {
   translate([c6x(-12) - 2, c6y(-3) - 2, wall - 0.5]) cube([4, 4, c6z(4.09) - wall + 0.4]);
   // a bar across the boot tab's free end, so it stops just past the switch's click: a hard press
   // goes into the wall instead of pushing the board off its hooks. Its ends stand on the wall.
-  let(stop_z = 1.6 + boot_travel * 18 / 16, x0 = boot.x - tab_w / 2 - 0.8 - 1.2, w = tab_w + 1.6 + 2.4)
-    translate([x0, boot.y - 2.8, 0]) {
+  // The tab runs 4 mm past the plunger so the bar clears it by 0.9 mm; touching, they'd fuse.
+  let(stop_z = 1.6 + boot_travel * 19.2 / 16, x0 = boot.x - tab_w / 2 - 0.8 - 1.2, w = tab_w + 1.6 + 2.4)
+    translate([x0, boot.y - 4, 0]) {
       translate([0, 0, stop_z]) cube([w, 1.6, 1]);
       for (x = [0, w - 1.2]) translate([x, 0, wall - 0.5]) cube([1.2, 1.6, stop_z + 1 - wall + 0.5]);
     }
@@ -186,10 +187,10 @@ module body() {
         translate([-half + wall, wall, z_led_back - 0.01]) cube([2 * (half - wall), 23.2 - wall, z_rim]);
         // the boot tab: a tongue, attached at its top end
         translate([boot.x, boot.y, -1]) linear_extrude(wall + 2) difference() {
-          translate([-tab_w / 2 - 0.8, -2.8]) square([tab_w + 1.6, 18.8]);
-          translate([-tab_w / 2, -2]) square([tab_w, 19]);
+          translate([-tab_w / 2 - 0.8, -4.8]) square([tab_w + 1.6, 20.8]);
+          translate([-tab_w / 2, -4]) square([tab_w, 21]);
         }
-        translate([boot.x - tab_w / 2, boot.y - 2, wall - 0.8]) cube([tab_w, 18, 1]); // thin it to flex
+        translate([boot.x - tab_w / 2, boot.y - 4, wall - 0.8]) cube([tab_w, 20, 1]); // thin it to flex
         // room for the PIR ribbon's fold: the back wall is 1.2 mm here. It sits between the PIR
         // cradle's ledges (inner edges at x = 6.12), which the ribbon has to pass between anyway.
         translate([-6, pir_y - 6, 1.2]) cube([12, c6_cy - 9.26 - 3 - (pir_y - 6), 2]);
@@ -299,7 +300,10 @@ if (part == "test_c6") difference() {
 }
 // just the boot tab, its stop bar and the two nearest pads: hold the C6 flat on the pads and press
 if (part == "test_boot") difference() {
-  cut([c6x(7.68), c6y(9.2) - 0.1, 0], [c6x(17), boot.y + 17, c6_top]) body();
+  union() {  // stops short of the USB tunnel, but keeps the whole of the bar's far leg
+    cut([c6x(7.68), c6y(9.2) - 0.1, 0], [c6x(17), boot.y + 17, c6_top]) body();
+    cut([c6x(16.9), boot.y - 4, 0], [boot.x + 4, boot.y - 2.4, c6_top]) body();
+  }
   translate([c6x(12.3), c6_cy - 1, -0.01]) linear_extrude(0.5) mirror([1, 0, 0])
     text(str(round(boot_travel * 10)), size = 4, halign = "center", valign = "center");
 }
