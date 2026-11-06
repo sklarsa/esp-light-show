@@ -22,7 +22,7 @@ $fn = 32;
 tol = 0.3;        // gap around a board
 snap = 0.6;       // how far the frame's snap ridge sticks out; lower if it's too hard to close
 c6_lip = 0.4;     // how far the C6 hooks overlap the board; more grips harder but strains the hook
-c6_boot_lip = 0.6; // the same for the two hooks on the boot side, which take the boot tab's pushes
+c6_boot_lip = 0.6; // the same for the hook beside the boot tab, which takes its pushes
 led_lip = 0.6;    // the same for the LED board's side clips
 boot_gap = 0.4;   // air between the boot tab and the switch; lower if a press doesn't click
 boot_travel = 0.8; // how far the plunger can move before the tab hits its stop: the gap plus the switch's travel
@@ -88,10 +88,11 @@ tab_w = 4;      // the boot tab's width; its slot is 0.8 mm each side
 
 module back_features() {
   // C6 hooks, two on each long edge, clear of the ribbons (x -5.5 to 7.3) and the boot tab's slot
-  // The boot side (side +1, up here) takes the boot tab's pushes, so its hooks grip deeper and
-  // the far one runs right up to the ribbon's path. It's the side away from the WiFi antenna.
+  // The boot side (side +1, up here) takes the boot tab's pushes. The hook next to the tab grips
+  // deeper; the far one runs right up to the ribbon's path, so it's sturdy, with the usual lip to
+  // keep the push-in force down. It's the side away from the WiFi antenna.
   post_hook(7.4, 10.6, 1, c6_boot_lip);  // as wide as the boot tab's slot allows
-  post_hook(-18.5, -5.5, 1, c6_boot_lip);
+  post_hook(-18.5, -5.5, 1);
   post_hook(7.4, 13, -1);
   post_hook(-16, -9.5, -1);
   // pads the board rests on, in gaps between its parts: beside the RGB LED and beside BOOT
