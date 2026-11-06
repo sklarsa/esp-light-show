@@ -14,6 +14,11 @@ motion-triggered light show on the Casita module's 10 LEDs, logging every LED co
 
 The light show doesn't depend on the network: without WiFi or QuestDB it just runs.
 
+## Enclosure
+
+`enclosure.scad` is a snap-together house for the boards; [ASSEMBLY.md](ASSEMBLY.md) has the
+step-by-step.
+
 ## Hardware
 
 The LED module and the motion module on the two ribbon ports, either way round.

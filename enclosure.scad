@@ -220,7 +220,9 @@ module frame() { // modelled in place: its back sits on the body's rim
 }
 
 // Bounding solids of the boards, from the STEP models.
-module boards() {
+module boards() { led_board(); c6_board(); pir_board(); }
+
+module led_board() {
   color("white") translate([0, 0, z_led_back]) linear_extrude(led_t) house();
   color("gold") {
     // LED board: buzzer and ribbon connector on the back, LEDs on the front
@@ -229,12 +231,18 @@ module boards() {
   }
   for (p = [[-28.2, -33.1], [28.3, -33.1], [14.3, 9.3], [-14.3, 9.1], [-28.7, -6.7], [28.4, -5.8], [29.6, -21.2], [-29.6, -20.8], [0, -34.4], [0, 21.8]])
     color("cyan") translate([p[0] - 1.4, led_oy + p[1] - 1.4, z_led_back + led_t]) cube([2.8, 2.8, 0.84]);
+}
+
+module c6_board() {
   // C6: board, RF module, ribbon connectors, USB, battery socket, switches
   color("seagreen") translate([c6x(-18.78), c6_cy - 9.26, c6_top]) cube([35.79, 18.52, 1.59]);
   for (b = [[-18.54, -7.39, 13.2, 16.6, 1.59, 4.09], [-4.81, 3.23, 11.4, 6.1, 1.59, 3.59], [-4.81, -9.33, 11.4, 6.1, 1.59, 3.59],
             [9.22, -4.47, 7.6, 8.94, 0.69, 4.85], [-0.97, -2.39, 6, 4.6, -1.91, 7.59],
             [11.32, 5.66, 4.8, 2.9, 1.59, 3.54], [11.32, -8.56, 4.8, 2.9, 1.59, 3.54]])
     color("silver") translate([c6x(b[0]), c6y(b[1] + b[3]), c6z(b[5])]) cube([b[2], b[3], b[5] - b[4]]);
+}
+
+module pir_board() {
   // PIR, connector down: white board, connector and 3-way header under it, sensor board, dome
   color("white") translate([-6.72, pir_y, pir_end]) cube([13.16, 1.6, 18.63]);
   color("gold") translate([-5.7, pir_y - 2, pir_end + 0.42]) cube([11.4, 2, 6.1]);
@@ -244,6 +252,14 @@ module boards() {
     color("ivory") translate([0, 0, z_rim - 0.01]) cylinder(d = 9.5, h = 8.9);
   }
 }
+
+// The two ribbons, roughly: C6 to LED board, and C6 to PIR. For pictures, not for fit.
+module ribbon(pts) {  // pts: [y, z] along the ribbon's path; it's 11 mm wide, centred on the ports
+  color("lightsteelblue") for (i = [0 : len(pts) - 2]) hull() for (p = [pts[i], pts[i + 1]])
+    translate([c6x(0.89) - 5.5, p[0] - 0.1, p[1] - 0.1]) cube([11, 0.2, 0.2]);
+}
+module led_ribbon() ribbon([[c6_cy + 6.3, c6z(2.6)], [c6_cy + 11, c6z(2.6)], [c6_cy + 14, 12], [c6_cy + 14, 21], [led_oy - 3.6, z_led_back - 1]]);
+module pir_ribbon() ribbon([[c6_cy - 6.3, c6z(2.6)], [c6_cy - 11, c6z(2.6) - 1], [pir_y + 2, 2.6], [pir_y - 1, 3.4], [pir_y - 1, pir_end + 0.4]]);
 
 module cut(from, to) { intersection() { children(); translate(from) cube(to - from); } }
 module flip() { translate([0, 0, z_rim + 0.1 + frame_t]) mirror([0, 0, 1]) children(); } // for printing the frame
