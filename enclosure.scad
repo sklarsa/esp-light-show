@@ -9,7 +9,6 @@
 //
 // Print the test_* parts first. They're cut from the same geometry, so tune the knobs and reprint:
 //   test_c6      back wall: C6 clips, boot tab, USB tunnel
-//   test_boot    just the boot tab and its stop bar; run with -D boot_travel=... to try heights
 //   test_led     a ring of the LED pocket: board fit and side clips
 //   test_pir     plinth: PIR rails and rear stops
 //   test_dome    frame's dome hole, to hold against test_pir
@@ -26,7 +25,7 @@ c6_lip = 0.4;     // how far the C6 hooks overlap the board; more grips harder b
 c6_boot_lip = 0.6; // the same for the hook beside the boot tab, which takes its pushes
 led_lip = 0.6;    // the same for the LED board's side clips
 boot_gap = 0.4;   // air between the boot tab and the switch; lower if a press doesn't click
-boot_travel = 0.8; // how far the plunger can move before the tab hits its stop: the gap plus the switch's travel
+boot_travel = 1.1; // how far the plunger can move before the tab hits its stop: the gap plus the switch's travel
 dome_hole = 10;   // the dome's base measured 9.5
 pir_play = 0.6;   // side play for the PIR's white board in its cradle
 dome_y = 11;      // dome centre height; move it if the dome doesn't line up
@@ -297,15 +296,6 @@ if (part == "test_c6") difference() {
   // the boot_travel it was made with, x10, cut into the outside of the back so test prints can be told apart
   translate([-14, c6_cy - 9, -0.01]) linear_extrude(0.5) mirror([1, 0, 0])
     text(str(round(boot_travel * 10)), size = 5, halign = "center", valign = "center");
-}
-// just the boot tab, its stop bar and the two nearest pads: hold the C6 flat on the pads and press
-if (part == "test_boot") difference() {
-  union() {  // stops short of the USB tunnel, but keeps the whole of the bar's far leg
-    cut([c6x(7.68), c6y(9.2) - 0.1, 0], [c6x(17), boot.y + 17, c6_top]) body();
-    cut([c6x(16.9), boot.y - 4, 0], [boot.x + 4, boot.y - 2.4, c6_top]) body();
-  }
-  translate([c6x(12.3), c6_cy - 1, -0.01]) linear_extrude(0.5) mirror([1, 0, 0])
-    text(str(round(boot_travel * 10)), size = 4, halign = "center", valign = "center");
 }
 if (part == "test_led") translate([0, 0, -(z_led_back - 11)]) cut([-40, -1, z_led_back - 11], [40, 95, z_led_back + led_t + 3]) body();
 if (part == "test_pir") translate([0, 0, -pir_end + 5]) cut([-12, -1, pir_end - 5], [12, 23, z_rim]) body(); // stops under the bar
