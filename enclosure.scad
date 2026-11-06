@@ -25,6 +25,7 @@ c6_lip = 0.4;     // how far the C6 hooks overlap the board; more grips harder b
 c6_boot_lip = 0.6; // the same for the hook beside the boot tab, which takes its pushes
 led_lip = 0.6;    // the same for the LED board's side clips
 boot_gap = 0.4;   // air between the boot tab and the switch; lower if a press doesn't click
+boot_travel = 0.8; // how far the plunger can move before the tab hits its stop: the gap plus the switch's travel
 dome_hole = 10;   // the dome's base measured 9.5
 pir_play = 0.6;   // side play for the PIR's white board in its cradle
 dome_y = 11;      // dome centre height; move it if the dome doesn't line up
@@ -101,6 +102,13 @@ module back_features() {
   translate([c6x(-18.78) - 0.3 - 2, c6_cy + 2, wall - 0.5]) cube([2, 5, c6_bot - wall + 0.5]);
   // and a third rest on the RF can, away from the antenna
   translate([c6x(-12) - 2, c6y(-3) - 2, wall - 0.5]) cube([4, 4, c6z(4.09) - wall + 0.4]);
+  // a bar across the boot tab's free end, so it stops just past the switch's click: a hard press
+  // goes into the wall instead of pushing the board off its hooks. Its ends stand on the wall.
+  let(stop_z = 1.6 + boot_travel * 18 / 16, x0 = boot.x - tab_w / 2 - 0.8 - 1.2, w = tab_w + 1.6 + 2.4)
+    translate([x0, boot.y - 2.8, 0]) {
+      translate([0, 0, stop_z]) cube([w, 1.6, 1]);
+      for (x = [0, w - 1.2]) translate([x, 0, wall - 0.5]) cube([1.2, 1.6, stop_z + 1 - wall + 0.5]);
+    }
   // boot tab's plunger, ending just short of the switch
   translate([boot.x, boot.y, 0.8]) cylinder(d = 3, h = c6z(3.54) - 0.8 - boot_gap); // rooted in the thinned tongue
   // USB tunnel's walls, so the plug finds the socket blind
@@ -276,12 +284,17 @@ if (part == "open") { color("royalblue") body(); boards(); }
 if (part == "check") { intersection() { body(); boards(); } intersection() { frame(); boards(); } }
 // Whole end stop and USB tunnel roof; the step at the top keeps the boot tab's hinge without
 // clipping a sliver off the roof wall.
-if (part == "test_c6") intersection() {
+if (part == "test_c6") difference() {
+ intersection() {
   body();
   union() {
     translate([-24, c6_cy - 13, 0]) cube([half + 25, 36.8, 15.6]);
     translate([-5, c6_cy + 23, 0]) cube([half + 6, 2.5, 15.6]);
   }
+ }
+  // the boot_travel it was made with, x10, cut into the outside of the back so test prints can be told apart
+  translate([-14, c6_cy - 9, -0.01]) linear_extrude(0.5) mirror([1, 0, 0])
+    text(str(round(boot_travel * 10)), size = 5, halign = "center", valign = "center");
 }
 if (part == "test_led") translate([0, 0, -(z_led_back - 11)]) cut([-40, -1, z_led_back - 11], [40, 95, z_led_back + led_t + 3]) body();
 if (part == "test_pir") translate([0, 0, -pir_end + 5]) cut([-12, -1, pir_end - 5], [12, 23, z_rim]) body(); // stops under the bar
