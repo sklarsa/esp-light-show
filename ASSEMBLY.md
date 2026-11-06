@@ -38,7 +38,10 @@ the board. Do it now: once the C6 is in, its connectors face the back wall and y
 - USB socket towards the opening in the **right-hand** wall (right as you'll see the house from the
   front), so the BOOT button sits over the tab in the back wall.
 - The ribbon on the BOOT side heads up towards the house; the other one heads down into the base.
-- Press it down until all four hooks click over its edges. It rests on three small pads.
+- Tilt it with the USB end low, about 25 degrees, and slide that end under the two ledges beside
+  the USB opening.
+- Then press the far end down until the two hooks click over its edges. It rests on three small pads.
+- To take it out, push the two far hooks outwards and lift the far end first.
 
 ## 3. Fit the motion sensor
 

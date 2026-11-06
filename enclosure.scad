@@ -22,7 +22,7 @@ $fn = 32;
 tol = 0.3;        // gap around a board
 snap = 0.6;       // how far the frame's snap ridge sticks out; lower if it's too hard to close
 c6_lip = 0.4;     // how far the C6 hooks overlap the board; more grips harder but strains the hook
-c6_boot_lip = 0.6; // the same for the hook beside the boot tab, which takes its pushes
+c6_end_lip = 0.8; // how far the fixed ledges reach over the board's USB end
 led_lip = 0.6;    // the same for the LED board's side clips
 boot_gap = 0.4;   // air between the boot tab and the switch; lower if a press doesn't click
 boot_travel = 1.1; // how far the plunger can move before the tab hits its stop: the gap plus the switch's travel
@@ -86,15 +86,28 @@ boot = [c6x(13.72), c6y(-7.11)];
 reset = [c6x(13.72), c6y(7.11)];
 tab_w = 4;      // the boot tab's width; its slot is 0.8 mm each side
 
+// Over the USB end's two corners, beside the tunnel. Tilt the board in, USB end first.
+module end_ledges() {
+  e = 9.26 + tol / 2;
+  xe = c6x(17.01);                  // the board's USB end
+  x0 = xe - c6_end_lip;
+  x1 = xe + 0.7 + 0.5;              // into the tunnel's wall
+  zb = c6_bot + 0.3;                // a little more air than the hooks: its underside may droop
+  for (s = [-1, 1]) translate([0, c6_cy, 0]) scale([1, s, 1]) {
+    translate([x0, 7, zb]) cube([x1 - x0, e + 1.6 - 7, 1.2]);
+    // carried by a solid L: a post outside the board's edge, clear of the boot tab's slot, and a
+    // block just past the board's end, joined to the tunnel's wall
+    translate([boot.x + tab_w / 2 + 0.8 + 0.1, e, wall - 0.5]) cube([x1 - (boot.x + tab_w / 2 + 0.9), 1.6, zb + 1.2 - wall + 0.5]);
+    translate([xe + tol, 7, wall - 0.5]) cube([x1 - xe - tol, e + 1.6 - 7, zb + 1.2 - wall + 0.5]);
+  }
+}
+
 module back_features() {
-  // C6 hooks, two on each long edge, clear of the ribbons (x -5.5 to 7.3) and the boot tab's slot
-  // The boot side (side +1, up here) takes the boot tab's pushes. The hook next to the tab grips
-  // deeper; the far one runs right up to the ribbon's path, so it's sturdy, with the usual lip to
-  // keep the push-in force down. It's the side away from the WiFi antenna.
-  post_hook(7.4, 10.6, 1, c6_boot_lip);  // as wide as the boot tab's slot allows
+  // The C6's USB end, where BOOT is, tucks under two fixed ledges, which a press can't bend; the
+  // far end snaps in under a hook on each long edge, clear of the ribbons (x -5.5 to 7.3).
   post_hook(-18.5, -5.5, 1);
-  post_hook(7.4, 13, -1);
   post_hook(-16, -9.5, -1);
+  end_ledges();
   // pads the board rests on, in gaps between its parts: beside the RGB LED and beside BOOT
   translate([c6x(9.45), c6y(9.2), wall - 0.5]) cube([1.8, 2.6, c6_top - wall + 0.5]); // between the RGB LED and RESET
   translate([c6x(9), c6y(-7.6), wall - 0.5]) cylinder(d = 2.4, h = c6_top - wall + 0.5);
