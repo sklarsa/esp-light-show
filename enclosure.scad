@@ -22,6 +22,7 @@ $fn = 32;
 tol = 0.3;        // gap around a board
 snap = 0.6;       // how far the frame's snap ridge sticks out; lower if it's too hard to close
 c6_lip = 0.4;     // how far the C6 hooks overlap the board; more grips harder but strains the hook
+c6_boot_lip = 0.6; // the same for the two hooks on the boot side, which take the boot tab's pushes
 led_lip = 0.6;    // the same for the LED board's side clips
 boot_gap = 0.4;   // air between the boot tab and the switch; lower if a press doesn't click
 boot_travel = 0.8; // how far the plunger can move before the tab hits its stop: the gap plus the switch's travel
@@ -71,13 +72,13 @@ function c6z(z) = c6_top + 1.59 - z;
 // A hook on a post, one solid profile rooted in the back wall. The board rests on separate pads,
 // so the post flexes over its whole length. It bends across the print's layers, its weakest way,
 // so it's as wide as the parts around it allow and thickens towards the root, with a fillet.
-module post_hook(x0, x1, side) {  // x0..x1: its span along the board's edge, in the C6's frame
+module post_hook(x0, x1, side, lip = c6_lip) {  // x0..x1: its span along the board's edge, in the C6's frame
   t = 1.6;
   e = 9.26 + tol / 2;
   zb = c6_bot + 0.15;  // the hook's flat underside; its chamfer lets the board push past
   root = wall - 0.5;
   translate([c6x(x0), c6_cy, 0]) scale([1, side, 1]) rotate([90, 0, 90]) linear_extrude(x1 - x0)
-    polygon([[e + t + 0.8, root], [e + t, c6_top], [e + t, zb + 1.1], [e, zb + 1.1], [e - c6_lip, zb], [e, zb],
+    polygon([[e + t + 0.8, root], [e + t, c6_top], [e + t, zb + 1.1], [e, zb + 1.1], [e - lip, zb], [e, zb],
              [e, wall + 0.8], [e - 0.8, wall], [e - 0.8, root]]);
 }
 
@@ -87,9 +88,12 @@ tab_w = 4;      // the boot tab's width; its slot is 0.8 mm each side
 
 module back_features() {
   // C6 hooks, two on each long edge, clear of the ribbons (x -5.5 to 7.3) and the boot tab's slot
-  post_hook(7.4, 10.6, 1); // boot side (side +1 is up here): as wide as the boot tab's slot allows
+  // The boot side (side +1, up here) takes the boot tab's pushes, so its hooks grip deeper and
+  // the far one runs right up to the ribbon's path. It's the side away from the WiFi antenna.
+  post_hook(7.4, 10.6, 1, c6_boot_lip);  // as wide as the boot tab's slot allows
+  post_hook(-18.5, -5.5, 1, c6_boot_lip);
   post_hook(7.4, 13, -1);
-  for (side = [-1, 1]) post_hook(-16, -9.5, side);
+  post_hook(-16, -9.5, -1);
   // pads the board rests on, in gaps between its parts: beside the RGB LED and beside BOOT
   translate([c6x(9.45), c6y(9.2), wall - 0.5]) cube([1.8, 2.6, c6_top - wall + 0.5]); // between the RGB LED and RESET
   translate([c6x(9), c6y(-7.6), wall - 0.5]) cylinder(d = 2.4, h = c6_top - wall + 0.5);
