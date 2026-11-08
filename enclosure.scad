@@ -28,7 +28,8 @@ boot_gap = 0.4;   // air between the boot tab and the switch; lower if a press d
 boot_travel = 1.1; // how far the plunger can move before the tab hits its stop: the gap plus the switch's travel
 dome_hole = 10;   // the dome's base measured 9.5
 pir_play = 0.6;   // side play for the PIR's white board in its cradle
-dome_y = 11;      // dome centre height; move it if the dome doesn't line up
+dome_y = 11;      // where the PIR's mount puts the dome by the datasheet; moves the whole mount
+dome_rise = 3.25; // the real dome sits this much higher: its top measured 19 mm up. Moves the frame's hole
 wall = 2.4;
 frame_t = 2;
 
@@ -240,7 +241,7 @@ module frame() { // modelled in place: its back sits on the body's rim
       }
     }
     translate([0, 0, z_rim - 1]) linear_extrude(frame_t + 3) offset(delta = -0.3) house();
-    translate([0, dome_y, z_rim - 1]) cylinder(d = dome_hole, h = frame_t + 3);
+    translate([0, dome_y + dome_rise, z_rim - 1]) cylinder(d = dome_hole, h = frame_t + 3);
     ridge(clear);
     translate([-60, -10, 0]) cube([120, 10, 60]); // flat on the desk, with the body
   }
@@ -274,7 +275,7 @@ module pir_board() {
   color("white") translate([-6.72, pir_y, pir_end]) cube([13.16, 1.6, 18.63]);
   color("gold") translate([-5.7, pir_y - 2, pir_end + 0.42]) cube([11.4, 2, 6.1]);
   color("dimgray") translate([-4, pir_y - 2.5, pir_end + 8.39]) cube([8, 5.7, 10.15]);
-  translate([0, dome_y, 0]) {
+  translate([0, dome_y + dome_rise, 0]) {
     color("black") translate([0, 0, z_rim - 2.6]) cylinder(d = 16, h = 2.6);
     color("ivory") translate([0, 0, z_rim - 0.01]) cylinder(d = 9.5, h = 8.9);
   }
