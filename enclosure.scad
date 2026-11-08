@@ -23,6 +23,8 @@ tol = 0.3;        // gap around a board
 snap = 0.6;       // how far the frame's snap ridge sticks out; lower if it's too hard to close
 c6_lip = 0.4;     // how far the C6 hooks overlap the board; more grips harder but strains the hook
 c6_end_lip = 0.8; // how far the fixed ledges reach over the board's USB end
+c6_play = 0.05;   // air between the C6 and its hooks and ledges; raise it if the board won't go in
+c6_end_play = 0.1; // air at each end of the C6
 led_lip = 0.6;    // the same for the LED board's side clips
 boot_gap = 0.4;   // air between the boot tab and the switch; lower if a press doesn't click
 boot_travel = 1.1; // how far the plunger can move before the tab hits its stop: the gap plus the switch's travel
@@ -76,7 +78,7 @@ function c6z(z) = c6_top + 1.59 - z;
 module post_hook(x0, x1, side, lip = c6_lip) {  // x0..x1: its span along the board's edge, in the C6's frame
   t = 1.6;
   e = 9.26 + tol / 2;
-  zb = c6_bot + 0.15;  // the hook's flat underside; its chamfer lets the board push past
+  zb = c6_bot + c6_play;  // the hook's flat underside; its chamfer lets the board push past
   root = wall - 0.5;
   translate([c6x(x0), c6_cy, 0]) scale([1, side, 1]) rotate([90, 0, 90]) linear_extrude(x1 - x0)
     polygon([[e + t + 0.8, root], [e + t, c6_top], [e + t, zb + 1.1], [e, zb + 1.1], [e - lip, zb], [e, zb],
@@ -93,13 +95,13 @@ module end_ledges() {
   xe = c6x(17.01);                  // the board's USB end
   x0 = xe - c6_end_lip;
   x1 = xe + 0.7 + 0.5;              // into the tunnel's wall
-  zb = c6_bot + 0.3;                // a little more air than the hooks: its underside may droop
+  zb = c6_bot + c6_play;
   for (s = [-1, 1]) translate([0, c6_cy, 0]) scale([1, s, 1]) {
     translate([x0, 7, zb]) cube([x1 - x0, e + 1.6 - 7, 1.2]);
     // carried by a solid L: a post outside the board's edge, clear of the boot tab's slot, and a
     // block just past the board's end, joined to the tunnel's wall
     translate([boot.x + tab_w / 2 + 0.8 + 0.1, e, wall - 0.5]) cube([x1 - (boot.x + tab_w / 2 + 0.9), 1.6, zb + 1.2 - wall + 0.5]);
-    translate([xe + tol, 7, wall - 0.5]) cube([x1 - xe - tol, e + 1.6 - 7, zb + 1.2 - wall + 0.5]);
+    translate([xe + c6_end_play, 7, wall - 0.5]) cube([x1 - xe - c6_end_play, e + 1.6 - 7, zb + 1.2 - wall + 0.5]);
   }
 }
 
@@ -113,7 +115,7 @@ module back_features() {
   translate([c6x(9.45), c6y(9.2), wall - 0.5]) cube([1.8, 2.6, c6_top - wall + 0.5]); // between the RGB LED and RESET
   translate([c6x(9), c6y(-7.6), wall - 0.5]) cylinder(d = 2.4, h = c6_top - wall + 0.5);
   // stop at the far end, so pushing the USB plug in can't slide BOOT off the plunger
-  translate([c6x(-18.78) - 0.3 - 2, c6_cy + 2, wall - 0.5]) cube([2, 5, c6_bot - wall + 0.5]);
+  translate([c6x(-18.78) - c6_end_play - 2, c6_cy + 2, wall - 0.5]) cube([2, 5, c6_bot - wall + 0.5]);
   // and a third rest on the RF can, away from the antenna
   translate([c6x(-12) - 2, c6y(-3) - 2, wall - 0.5]) cube([4, 4, c6z(4.09) - wall + 0.4]);
   // a bar across the boot tab's free end, so it stops just past the switch's click: a hard press
