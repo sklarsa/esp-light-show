@@ -47,6 +47,8 @@ the board. Do it now: once the C6 is in, its connectors face the back wall and y
 
 ![The motion sensor going into the base](docs/assembly/step3.png)
 
+- If you took the dome off its 3-pin header, put it back with its OUT pin in the hole the white
+  board marks **Out**. Turned round, it gets its power backwards and never sees motion.
 - Plug the lower ribbon into the sensor's connector.
 - Turn the sensor **connector down**: the dome then hangs below the white board.
 - Slide it into the channel in the base, ribbon end first, under the small lips, until it stops.
