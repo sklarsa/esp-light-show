@@ -10,7 +10,7 @@ pub type Pixels = [Rgb; LEDS];
 
 // ---- Knobs. Tune these against the real hardware and room. ----
 /// Top brightness out of 255. Ten full-white WS2812s pull ~600 mA from USB, and it's a lot of light.
-pub const MAX_BRIGHTNESS: u32 = 40;
+pub const MAX_BRIGHTNESS: u32 = 30;
 pub const FRAME_MS: u64 = 33;
 /// The show stays up this long after the last motion.
 pub const HOLD_MS: u64 = 120_000;
