@@ -4,7 +4,8 @@ No screws or glue: everything clicks in. Allow 15 minutes.
 
 ## You need
 
-- Printed `body.stl` and `frame.stl` (see the header of `enclosure.scad`)
+- Printed `stl/body.stl` and `stl/frame.stl`, in PETG with no supports (regenerate them with the
+  commands in the header of `enclosure.scad` after changing a knob)
 - The ESPHome Starter Kit's C6 board, LED module and motion (PIR) module
 - Two ribbon cables, about 40 mm
 - A sheet of plain printer paper and scissors

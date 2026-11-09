@@ -1,2 +1,4 @@
 target/
-stl/
+stl/*
+!stl/body.stl
+!stl/frame.stl

@@ -18,7 +18,8 @@ The light show doesn't depend on the network: without WiFi or QuestDB it just ru
 
 ## Enclosure
 
-`enclosure.scad` is a snap-together house for the boards; [ASSEMBLY.md](ASSEMBLY.md) has the
+`enclosure.scad` is a snap-together house for the boards, with ready-to-print `stl/body.stl` (the
+base) and `stl/frame.stl` (the cover); [ASSEMBLY.md](ASSEMBLY.md) has the
 step-by-step.
 
 ## Hardware

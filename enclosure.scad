@@ -4,8 +4,8 @@
 //
 // Board dimensions come from Apollo's STEP models; PIR sensor and ribbons were measured by hand.
 //
-//   openscad -D 'part="body"'  -o body.stl  enclosure.scad   (back wall on the bed)
-//   openscad -D 'part="frame"' -o frame.stl enclosure.scad   (front face on the bed)
+//   openscad -D 'part="body"'  -o stl/body.stl  enclosure.scad   (back wall on the bed)
+//   openscad -D 'part="frame"' -o stl/frame.stl enclosure.scad   (front face on the bed)
 //
 // Print the test_* parts first. They're cut from the same geometry, so tune the knobs and reprint:
 //   test_c6      back wall: C6 clips, boot tab, USB tunnel
