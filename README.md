@@ -1,5 +1,7 @@
 # esp-light-show
 
+![The light show in its house, LEDs lit, motion sensor below](docs/light-show.jpg)
+
 `no_std` Rust firmware for the [ESPHome Starter Kit](https://esphome.io/starter-kit/)'s ESP32-C6: a
 motion-triggered light show on the Casita module's 10 LEDs, logging every LED colour change to
 [QuestDB](https://questdb.com) over QWP with [qwp-embedded](https://github.com/sklarsa/qwp-embedded).
