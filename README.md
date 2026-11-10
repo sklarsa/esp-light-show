@@ -16,6 +16,18 @@ motion-triggered light show on the Casita module's 10 LEDs, logging every LED co
 
 The light show doesn't depend on the network: without WiFi or QuestDB it just runs.
 
+## Bill of materials
+
+| Qty | Part | Notes |
+|---|---|---|
+| 1 | [ESPHome Starter Kit](https://esphome.io/starter-kit/) | Uses its ESP32-C6 board, the Casita LED module and the motion (PIR) module |
+| 2 | Ribbon cables, about 40 mm | C6 to each module |
+| 1 | USB-C cable and 5 V USB power supply | Flashing and running |
+| | PETG filament, for `stl/body.stl` and `stl/frame.stl` | Any FDM printer, no supports |
+| 1 | Sheet of plain printer paper | The LED diffuser |
+
+Tools: scissors and a craft knife. [ASSEMBLY.md](ASSEMBLY.md) has the build.
+
 ## Enclosure
 
 `enclosure.scad` is a snap-together house for the boards, with ready-to-print `stl/body.stl` (the
