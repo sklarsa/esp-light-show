@@ -20,8 +20,7 @@ The light show doesn't depend on the network: without WiFi or QuestDB it just ru
 
 | Qty | Part | Notes |
 |---|---|---|
-| 1 | [ESPHome Starter Kit](https://esphome.io/starter-kit/) | Uses its ESP32-C6 board, the Casita LED module and the motion (PIR) module |
-| 2 | Ribbon cables, about 40 mm | C6 to each module |
+| 1 | [ESPHome Starter Kit](https://esphome.io/starter-kit/) | Uses its ESP32-C6 board, the Casita LED module, the motion (PIR) module and two of its ribbon cables |
 | 1 | USB-C cable and 5 V USB power supply | Flashing and running |
 | | PETG filament, for `stl/body.stl` and `stl/frame.stl` | Any FDM printer, no supports |
 | 1 | Sheet of plain printer paper | The LED diffuser |
