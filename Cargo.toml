@@ -27,7 +27,7 @@ static_cell = "2.1.1"
 sntpc = { version = "0.11", default-features = false }
 sntpc-net-embassy = { version = "0.11", default-features = false }
 
-qwp-embedded = { git = "https://github.com/sklarsa/qwp-embedded", rev = "7ff4370dd121c549be8196fe0aa2c0906a5bd1d1", features = ["sender"] }
+qwp-embedded = { git = "https://github.com/sklarsa/qwp-embedded", rev = "fc0b56fcb99d5758962748232bf8d4a8426aa612", features = ["sender"] }
 
 [profile.dev]
 opt-level = "s"
